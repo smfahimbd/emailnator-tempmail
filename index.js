@@ -17,7 +17,7 @@ async function main() {
       console.log('Message list:', messages);
     } else {
       const emailData = await generateEmail();
-      console.log('Generated email:', emailData.email ? emailData.email[0] : 'No email generated');
+      console.log('Generated email:', emailData.email || 'No email generated');
     }
   } catch (error) {
     console.error('Error:', error.message || error);

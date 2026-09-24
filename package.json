@@ -4,11 +4,9 @@
   "description": "Node.js script to generate email using Emailnator API",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "axios-cookiejar-support": "^6.0.4",
-    "tough-cookie": "^5.1.2"
+    "axios": "^1.6.0"
   }
 }
