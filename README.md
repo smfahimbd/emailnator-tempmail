@@ -18,9 +18,31 @@ A Node.js command-line tool for generating temporary emails and checking message
 npm install
 ```
 
-## Usage
+## Web Interface
 
-Run the tool using Node.js with the following commands:
+Start the web server:
+
+```bash
+npm start
+```
+
+Then open your browser and navigate to `http://localhost:3000`
+
+The web interface provides:
+- Generate temporary emails with a click
+- View message list for any email
+- Read email content in HTML format
+- Responsive design for mobile and desktop
+
+## CLI Usage
+
+For command-line usage, run:
+
+```bash
+npm run cli
+```
+
+Or directly with Node.js:
 
 ### Generate a new email
 

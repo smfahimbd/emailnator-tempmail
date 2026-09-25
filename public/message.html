@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message View - Emailnator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); min-height: 100vh; padding: 0; margin: 0; }
+        .container { width: 100%; height: 100vh; background: #ffffff; overflow: hidden; display: flex; flex-direction: column; }
+        .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .header h1 { font-size: 1.2em; font-weight: 700; letter-spacing: -0.2px; }
+        .header .back-button { background: rgba(255, 255, 255, 0.16); color: white; padding: 10px 16px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; cursor: pointer; text-decoration: none; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+        .header .back-button:hover { background: rgba(255, 255, 255, 0.28); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
+        .content { padding: 40px; overflow-y: auto; flex: 1; background: #f8fafc; }
+        .loading { text-align: center; padding: 48px 24px; color: #64748b; }
+        .loading-spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { background: #fef2f2; color: #991b1b; padding: 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #fecaca; font-size: 0.95em; }
+        .message-view { background: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); max-width: 1400px; margin: 0 auto; }
+        .message-view h2 { color: #111827; margin-bottom: 20px; font-size: 1.45em; font-weight: 700; line-height: 1.35; letter-spacing: -0.2px; }
+        .message-view .meta { color: #64748b; margin-bottom: 24px; padding: 16px 18px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+        .message-view .meta p { margin: 8px 0; font-size: 0.92em; line-height: 1.5; }
+        .message-view .meta p:first-child { margin-top: 0; }
+        .message-view .meta p:last-child { margin-bottom: 0; }
+        .message-view .meta strong { color: #475569; font-weight: 600; }
+        .message-view .meta span { color: #6366f1; font-weight: 500; }
+        .message-view .content { background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 300px; overflow: hidden; }
+        .message-view .content iframe { width: 100%; height: 600px; border: none; border-radius: 8px; background: white; }
+        .no-content { text-align: center; padding: 48px 24px; color: #64748b; }
+        .no-content .icon { font-size: 3em; margin-bottom: 16px; }
+        .no-content p { font-size: 0.95em; color: #64748b; }
+        @media (max-width: 768px) {
+            .container { height: auto; min-height: 100vh; }
+            .header { padding: 16px 20px; gap: 12px; }
+            .header h1 { font-size: 1.1em; }
+            .header .back-button { padding: 9px 13px; font-size: 0.85em; }
+            .content { padding: 20px; }
+            .message-view { padding: 20px; border-radius: 14px; }
+            .message-view h2 { font-size: 1.2em; margin-bottom: 16px; }
+            .message-view .meta { padding: 14px; margin-bottom: 18px; }
+            .message-view .content { padding: 12px; min-height: 250px; }
+            .message-view .content iframe { height: 450px; }
+        }
+        @media (max-width: 480px) {
+            .header { padding: 14px 16px; }
+            .header h1 { font-size: 1em; }
+            .header .back-button { padding: 8px 11px; font-size: 0.78em; }
+            .content { padding: 14px; }
+            .message-view { padding: 16px; border-radius: 12px; }
+            .message-view h2 { font-size: 1.05em; }
+            .message-view .meta p { font-size: 0.84em; }
+            .message-view .content { padding: 8px; }
+            .message-view .content iframe { height: 350px; }
+        }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Message View</h1>
+            <a href="#" id="backButton" class="back-button">← Back to Inbox</a>
+        </div>
+
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                Loading message...
+            </div>
+            <div id="error" class="error" style="display: none;"></div>
+
+            <div id="messageView" class="message-view" style="display: none;">
+                <h2 id="messageSubject"></h2>
+                <div class="meta">
+                    <p><strong>From:</strong> <span id="messageFrom"></span></p>
+                    <p><strong>Date:</strong> <span id="messageDate"></span></p>
+                </div>
+                <div class="content" id="messageContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pathParts = window.location.pathname.split('/inbox/');
+        const email = decodeURIComponent(pathParts[1].split('/')[0]);
+        const messageID = decodeURIComponent(pathParts[1].split('/')[1]);
+
+        document.getElementById('backButton').href = `/inbox/${encodeURIComponent(email)}`;
+
+        function loadMessage() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('messageView').style.display = 'none';
+
+            fetch(`/api/message-view/${encodeURIComponent(email)}/${encodeURIComponent(messageID)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.success) {
+                        displayMessage(data.data);
+                    } else {
+                        showError(data.error);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    showError('Failed to load message: ' + error.message);
+                });
+        }
+
+        function displayMessage(message) {
+            document.getElementById('messageSubject').textContent = message.subject;
+            document.getElementById('messageFrom').textContent = message.from;
+            document.getElementById('messageDate').textContent = new Date(message.date * 1000).toLocaleString();
+
+            const contentDiv = document.getElementById('messageContent');
+            if (message.content) {
+                contentDiv.innerHTML = `<iframe srcdoc="${message.content.replace(/"/g, '&quot;')}"></iframe>`;
+                const iframe = contentDiv.querySelector('iframe');
+                iframe.onload = function() {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const links = iframeDoc.querySelectorAll('a');
+                        links.forEach(link => {
+                            link.setAttribute('target', '_blank');
+                            link.setAttribute('rel', 'noopener noreferrer');
+                        });
+                    } catch (e) {
+                        console.log('Cannot access iframe content due to security restrictions');
+                    }
+                };
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="no-content">
+                        <div class="icon">📭</div>
+                        <p>No content available</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('messageView').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        loadMessage();
+    </script>
+</body>
+
+</html>

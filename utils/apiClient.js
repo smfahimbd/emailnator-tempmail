@@ -24,9 +24,12 @@ function getCommonHeaders() {
 }
 
 function getHeadersWithReferer(referer) {
+  const ip = [10, crypto.randomInt(256), crypto.randomInt(256), crypto.randomInt(256)].join(".");
   return {
     ...getCommonHeaders(),
-    'referer': referer
+    'referer': referer,
+    'x-forwarded-for': ip,
+    'x-real-ip': ip
   };
 }
 
